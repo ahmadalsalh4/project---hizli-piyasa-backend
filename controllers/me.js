@@ -45,8 +45,21 @@ const deleteUserProfile = async (req, res) => {
 
 
 const getUserAds = async (req, res) => {
+  const userId = req.userId;
   try {
-    res.status(200).json('not implemented yet get User Ads');
+    const response = await pool.query(
+      `SELECT 
+        ads.title,
+        ads.price,
+        to_char(ads.date, 'YYYY-MM-DD') as date,
+        ads.image_path,
+        cities.city_name as city_name
+      FROM ads
+      INNER JOIN cities ON ads.city_id = cities.id
+      WHERE user_id = $1
+      ORDER BY ads.date DESC`,[userId]
+    );
+    res.status(200).json(response.rows);
   } catch (err) {
     res.status(500).json({ 
       error: err.message });
@@ -57,7 +70,6 @@ const postAd = async (req, res) => {
   const userId = req.userId;
   const {title, description, price, image_path, category_id , city_id  } = req.body;
   try {
-    console.log(userId)
     const result = await pool.query(
       'INSERT INTO ads (user_id, title, description, price, image_path, category_id , city_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, price',
       [userId,title, description, Number(price), image_path, Number(category_id) , Number(city_id)]
