@@ -26,12 +26,12 @@ const patchUserProfile = async (req, res) => {
 const deleteUserProfile = async (req, res) => {
   const userId = req.userId;
   try {
-    const result = await pool.query(
+    await pool.query(
       'DELETE FROM users WHERE id = $1', 
       [userId]
     );
 
-    res.status(200).json(`users deleted`);
+    res.status(200).json(`User deleted successfully`);
   } catch (err) {
     res.status(500).json({ 
       error: err.message });
@@ -79,14 +79,22 @@ const patchAd = async (req, res) => {
 };
 
 const deleteAd = async (req, res) => {
+  const userId = req.userId;
+  const Adid = req.params.id;
   try {
-    res.status(200).json('not implemented yet delete Ad');
+    const response = await pool.query(
+      'SELECT user_id FROM ads WHERE id = $1', 
+      [Adid]
+    );
+    if(response.rows[0].user_id !== userId)
+        return res.status(401).json('you dont have this ads');
+    
+    await pool.query('delete FROM ads WHERE id = $1', [Adid]);
+    res.status(200).json(`Ad with ID ${Adid} deleted successfully`);
   } catch (err) {
     res.status(500).json({ 
       error: err.message });
   }
 };
-
-
 
 module.exports = { getUserProfile ,patchUserProfile, deleteUserProfile, getUserAds, postAd, patchAd, deleteAd };
