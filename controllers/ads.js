@@ -19,7 +19,7 @@ const getAdsDetailed = async (req, res) => {
   }
 };
 
-const getUserDetailed = async (req, res) => {
+const getAdsByUser = async (req, res) => {
   try {
     const userId = req.params.id;
     res.status(200).json(`not implemented yet all user ${userId} ads`);
@@ -29,4 +29,4 @@ const getUserDetailed = async (req, res) => {
   }
 };
 
-module.exports = { getAllAds, getAdsDetailed, getUserDetailed };
+module.exports = { getAllAds, getAdsDetailed, getAdsByUser };

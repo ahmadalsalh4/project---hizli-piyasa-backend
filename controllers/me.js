@@ -23,4 +23,13 @@ const patchUserProfile = async (req, res) => {
   }
 };
 
-module.exports = { getUserProfile ,patchUserProfile};
+const deleteUserProfile = async (req, res) => {
+  try {
+    res.status(200).json('not implemented yet Profile deleted');
+  } catch (err) {
+    res.status(500).json({ 
+      error: err.message });
+  }
+};
+
+module.exports = { getUserProfile ,patchUserProfile, deleteUserProfile };

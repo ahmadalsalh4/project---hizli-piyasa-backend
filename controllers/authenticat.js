@@ -2,7 +2,7 @@ const pool = require('../services/db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-const login = async (req, res) => {
+const Postlogin = async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
@@ -18,7 +18,7 @@ const login = async (req, res) => {
   }
 };
 
-const register = async (req, res) => {
+const Postregister = async (req, res) => {
   const { name, surname, phone_number, email, password,profile_image_path } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -33,4 +33,4 @@ const register = async (req, res) => {
   }
 };
 
-module.exports = { register, login };
+module.exports = { Postregister, Postlogin };
