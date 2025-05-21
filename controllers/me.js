@@ -32,4 +32,48 @@ const deleteUserProfile = async (req, res) => {
   }
 };
 
-module.exports = { getUserProfile ,patchUserProfile, deleteUserProfile };
+
+
+
+
+
+
+const getUserAds = async (req, res) => {
+  try {
+    res.status(200).json('not implemented yet get User Ads');
+  } catch (err) {
+    res.status(500).json({ 
+      error: err.message });
+  }
+};
+
+const postAd = async (req, res) => {
+  try {
+    res.status(200).json('not implemented yet post Ad');
+  } catch (err) {
+    res.status(500).json({ 
+      error: err.message });
+  }
+};
+
+const patchAd = async (req, res) => {
+  try {
+    res.status(200).json('not implemented yet patch Ad');
+  } catch (err) {
+    res.status(500).json({ 
+      error: err.message });
+  }
+};
+
+const deleteAd = async (req, res) => {
+  try {
+    res.status(200).json('not implemented yet delete Ad');
+  } catch (err) {
+    res.status(500).json({ 
+      error: err.message });
+  }
+};
+
+
+
+module.exports = { getUserProfile ,patchUserProfile, deleteUserProfile, getUserAds, postAd, patchAd, deleteAd };
