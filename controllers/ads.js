@@ -27,17 +27,25 @@ const getAdsDetailed = async (req, res) => {
   const Ad_id = req.params.id
   try {
     const response = await pool.query(
-      `SELECT 
-        ads.title,
-        ads.price,
-        to_char(ads.date, 'YYYY-MM-DD') as date,
-        ads.image_path,
-        cities.city_name as city_name
-      FROM ads
-      INNER JOIN cities ON ads.city_id = cities.id
-      WHERE ads.state_id = 1 and ads.id = $1
-      ORDER BY ads.date DESC`,[Ad_id]
-    );
+  `SELECT
+    ads.id,
+    ads.title,
+    ads.description,
+    ads.price,
+    to_char(ads.date, 'YYYY-MM-DD') as date,
+    ads.image_path,
+    cities.city_name as city_name,
+    states.state_name as state_name,
+    categories.category_name as category_name,
+    users.id as user_id
+  FROM ads
+  INNER JOIN cities ON ads.city_id = cities.id
+  INNER JOIN states ON ads.state_id = states.id
+  INNER JOIN categories ON ads.category_id = categories.id
+  INNER JOIN users ON ads.user_id = users.id
+  WHERE ads.state_id = 1 and ads.id = $1
+  ORDER BY ads.date DESC`, [Ad_id]
+);
     if(response.rowCount === 0)
       return res.status(404).json(`ads with id = ${Ad_id} not found`)
     res.status(200).json(response.rows);

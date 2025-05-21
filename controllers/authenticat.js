@@ -25,10 +25,11 @@ const Postregister = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const image_Url = await uploadToImgBB(profile_image_path);
     const result = await pool.query(
-      'INSERT INTO users (name, surname, phone_number, email, password, profile_image_path) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, name, surname, phone_number, email',
+      'INSERT INTO users (name, surname, phone_number, email, password, profile_image_path) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, name, surname, phone_number, email, profile_image_path',
       [name, surname, phone_number, email, hashedPassword, image_Url]
     );
-    res.status(201).json(result.rows[0]);
+    const token = jwt.sign({ userId: result.rows[0].id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    res.status(201).json(result.rows[0],token);
   } catch (err) {
     res.status(500).json({ 
       error: err.message });

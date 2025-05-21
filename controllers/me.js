@@ -4,7 +4,7 @@ const getUserProfile = async (req, res) => {
   const userId = req.userId;
   try {
     const result = await pool.query(
-      'SELECT id, name, surname, phone_number, email FROM users WHERE id = $1', 
+      'SELECT id, name, surname, phone_number, email, profile_image_path FROM users WHERE id = $1', 
       [userId]
     );
 
@@ -48,7 +48,7 @@ const getUserAds = async (req, res) => {
   const userId = req.userId;
   try {
     const response = await pool.query(
-      `SELECT 
+      `SELECT
         ads.title,
         ads.price,
         to_char(ads.date, 'YYYY-MM-DD') as date,

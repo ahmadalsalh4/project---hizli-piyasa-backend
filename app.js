@@ -9,7 +9,7 @@ const adsRoutes = require('./routes/ads');
 const app = express();
 
 app.use(cors());
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '5mb' }));
 
 // Routes
 app.use('/authenticat', authenticatRoutes);
