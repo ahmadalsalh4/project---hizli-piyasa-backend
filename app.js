@@ -4,7 +4,7 @@ require('dotenv').config();
 
 const authenticatRoutes = require('./routes/authenticat');
 const meRoutes = require('./routes/me');
-//const adsRoutes = require('./routes/ads');
+const adsRoutes = require('./routes/ads');
 
 const app = express();
 
@@ -14,7 +14,7 @@ app.use(express.json());
 // Routes
 app.use('/authenticat', authenticatRoutes);
 app.use('/me', meRoutes);
-//app.use('/ads', adsRoutes);
+app.use('/ads', adsRoutes);
 
 // Start server
 const PORT = process.env.L_PORT;
