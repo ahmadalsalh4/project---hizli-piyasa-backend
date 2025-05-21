@@ -1,4 +1,4 @@
-const pool = require('../config/db');
+const pool = require('../services/db');
 
 const getUserProfile = async (req, res) => {
   const userId = req.userId;
@@ -8,7 +8,7 @@ const getUserProfile = async (req, res) => {
       [userId]
     );
 
-    res.status(201).json(result.rows[0]);
+    res.status(200).json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
