@@ -2,8 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
-const registerRoutes = require('./routes/register');
-const loginRoutes = require('./routes/login');
+const authenticatRoutes = require('./routes/authenticat');
 const meRoutes = require('./routes/me');
 //const adsRoutes = require('./routes/ads');
 
@@ -13,8 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/register', registerRoutes);
-app.use('/login', loginRoutes);
+app.use('/authenticat', authenticatRoutes);
 app.use('/me', meRoutes);
 //app.use('/ads', adsRoutes);
 
