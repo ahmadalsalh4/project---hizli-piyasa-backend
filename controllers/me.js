@@ -1,4 +1,5 @@
 const pool = require('../services/db');
+const uploadToImgBB = require('../services/imageUploader');
 
 const getUserProfile = async (req, res) => {
   const userId = req.userId;
@@ -70,9 +71,10 @@ const postAd = async (req, res) => {
   const userId = req.userId;
   const {title, description, price, image_path, category_id , city_id  } = req.body;
   try {
+    const image_Url = await uploadToImgBB(image_path);
     const result = await pool.query(
       'INSERT INTO ads (user_id, title, description, price, image_path, category_id , city_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, price',
-      [userId,title, description, Number(price), image_path, Number(category_id) , Number(city_id)]
+      [userId,title, description, Number(price), image_Url, Number(category_id) , Number(city_id)]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
