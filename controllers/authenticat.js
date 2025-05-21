@@ -1,4 +1,5 @@
 const pool = require('../services/db');
+const uploadToImgBB = require('../services/imageUploader');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -22,9 +23,10 @@ const Postregister = async (req, res) => {
   const { name, surname, phone_number, email, password,profile_image_path } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
+    const image_Url = await uploadToImgBB(profile_image_path);
     const result = await pool.query(
       'INSERT INTO users (name, surname, phone_number, email, password, profile_image_path) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, name, surname, phone_number, email',
-      [name, surname, phone_number, email, hashedPassword, profile_image_path]
+      [name, surname, phone_number, email, hashedPassword, image_Url]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
