@@ -2,24 +2,106 @@ const pool = require('../services/db');
 
 const getAllAds = async (req, res) => {
   try {
-    const response = await pool.query(
-      `SELECT 
+    // Extract query parameters
+    const { 
+      category, 
+      city, 
+      minPrice, 
+      maxPrice, 
+      startDate, 
+      search,
+      sortBy = 'date',  // Default sorting by date
+      sortOrder = 'DESC' // Default order DESC (newest first)
+    } = req.query;
+
+    // Validate numeric inputs
+    if (minPrice && isNaN(parseFloat(minPrice))) {
+      return res.status(400).json({ error: "minPrice must be a number" });
+    }
+    if (maxPrice && isNaN(parseFloat(maxPrice))) {
+      return res.status(400).json({ error: "maxPrice must be a number" });
+    }
+
+    // Base query
+    let query = `
+      SELECT 
+        ads.id,
         ads.title,
+        ads.description,
         ads.price,
         to_char(ads.date, 'YYYY-MM-DD') as date,
         ads.image_path,
-        cities.city_name as city_name
+        cities.city_name as city_name,
+        categories.category_name as category_name
       FROM ads
       INNER JOIN cities ON ads.city_id = cities.id
+      LEFT JOIN categories ON ads.category_id = categories.id
       WHERE ads.state_id = 1
-      ORDER BY ads.date DESC`
-    );
-    if(response.rowCount === 0)
-      return res.status(404).json(`there are no ads`)
+    `;
+
+    // Array to hold query parameters
+    const queryParams = [];
+    let paramCount = 1;
+
+    // Add filters conditionally
+    if (category) {
+      query += ` AND category_name ILIKE $${paramCount}`;
+      queryParams.push(`%${category}%`);
+      paramCount++;
+    }
+
+    if (city) {
+      query += ` AND cities.city_name ILIKE $${paramCount}`;
+      queryParams.push(`%${city}%`);
+      paramCount++;
+    }
+
+    if (minPrice) {
+      query += ` AND ads.price >= $${paramCount}`;
+      queryParams.push(parseFloat(minPrice));
+      paramCount++;
+    }
+
+    if (maxPrice) {
+      query += ` AND ads.price <= $${paramCount}`;
+      queryParams.push(parseFloat(maxPrice));
+      paramCount++;
+    }
+
+    if (startDate) {
+      query += ` AND ads.date >= $${paramCount}`;
+      queryParams.push(startDate);
+      paramCount++;
+    }
+
+    if (search) {
+      query += ` AND (ads.title ILIKE $${paramCount} OR ads.description ILIKE $${paramCount})`;
+      queryParams.push(`%${search}%`);
+      paramCount++;
+    }
+
+    // Validate and apply sorting (prevent SQL injection)
+    const validSortColumns = ['date', 'price', 'title']; // Allowed columns for sorting
+    const validSortOrders = ['ASC', 'DESC'];
+
+    const sortColumn = validSortColumns.includes(sortBy) ? sortBy : 'date';
+    const sortDirection = validSortOrders.includes(sortOrder.toUpperCase()) ? sortOrder.toUpperCase() : 'DESC';
+
+    query += ` ORDER BY ads.${sortColumn} ${sortDirection}`;
+
+    // Execute query
+    const response = await pool.query(query, queryParams);
+
+    if (response.rowCount === 0) {
+      return res.status(404).json({ message: 'No ads found matching your criteria' });
+    }
+
     res.status(200).json(response.rows);
   } catch (err) {
+    console.error("Error fetching ads:", err);
     res.status(500).json({ 
-      error: err.message });
+      error: "Internal server error" 
+    });
   }
 };
 
@@ -43,8 +125,7 @@ const getAdsDetailed = async (req, res) => {
   INNER JOIN states ON ads.state_id = states.id
   INNER JOIN categories ON ads.category_id = categories.id
   INNER JOIN users ON ads.user_id = users.id
-  WHERE ads.state_id = 1 and ads.id = $1
-  ORDER BY ads.date DESC`, [Ad_id]
+  WHERE ads.state_id = 1 and ads.id = $1`, [Ad_id]
 );
     if(response.rowCount === 0)
       return res.status(404).json(`ads with id = ${Ad_id} not found`)
