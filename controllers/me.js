@@ -105,17 +105,20 @@ const getUserAds = async (req, res) => {
   try {
     const response = await pool.query(
       `SELECT
+        ads.id,
         ads.title,
         ads.price,
         to_char(ads.date, 'YYYY-MM-DD') as date,
         ads.image_path,
-        cities.city_name as city_name
+        cities.city_name as city_name,
+        states.state_name as state_name
       FROM ads
+      INNER JOIN states ON ads.state_id = states.id
       INNER JOIN cities ON ads.city_id = cities.id
       WHERE user_id = $1
       ORDER BY ads.date DESC`,[userId]
     );
-    res.status(200).json(response.rows);
+    res.status(200).json({rowCount : response.rowCount, rows : response.rows});
   } catch (err) {
     res.status(500).json({ 
       error: err.message });

@@ -88,7 +88,7 @@ const getAllAds = async (req, res) => {
       return res.status(404).json({ message: 'No ads found matching your criteria' });
     }
 
-    res.status(200).json(response.rows);
+    res.status(200).json({rowCount : response.rowCount, rows : response.rows});
   } catch (err) {
     console.error("Error fetching ads:", err);
     res.status(500).json({ 
@@ -133,19 +133,20 @@ const getAdsByUser = async (req, res) => {
   try {
     const response = await pool.query(
       `SELECT 
+        ads.id,
         ads.title,
         ads.price,
         to_char(ads.date, 'YYYY-MM-DD') as date,
         ads.image_path,
         cities.city_name as city_name
-      FROM ads
+        FROM ads
       INNER JOIN cities ON ads.city_id = cities.id
       WHERE ads.state_id = 1 and user_id = $1
       ORDER BY ads.date DESC`,[usr_id]
     );
     if(response.rowCount === 0)
       return res.status(404).json(`user with id = ${usr_id} douse not have any ad`)
-    res.status(200).json(response.rows);
+    res.status(200).json({rowCount : response.rowCount, rows : response.rows});
   } catch (err) {
     res.status(500).json({ 
       error: err.message });
