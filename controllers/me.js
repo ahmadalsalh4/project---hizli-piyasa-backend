@@ -140,10 +140,87 @@ const postAd = async (req, res) => {
 
 const patchAd = async (req, res) => {
   try {
-    res.status(200).json('not implemented yet patch Ad');
-  } catch (err) {
+  const userId = req.userId;
+  const Adid = req.params.id;
+  const { title, description, price, image_path, category_id, city_id, state_id } = req.body;
+
+  const first_response = await pool.query(
+      'SELECT user_id FROM ads WHERE id = $1', 
+      [Adid]
+    );
+    if(first_response.rows[0].user_id !== userId)
+        return res.status(401).json('you dont have this ads');
+
+  let query = `
+      UPDATE ads
+        SET 
+    `;
+
+    const queryParams = [];
+    let paramCount = 1;
+
+    if (title) {
+      query += ` title = $${paramCount},`;
+      queryParams.push(title);
+      paramCount++;
+    }
+
+    if (description) {
+      query += ` description = $${paramCount},`;
+      queryParams.push(description);
+      paramCount++;
+    }
+
+    if (price) {
+      query += ` price = $${paramCount},`;
+      queryParams.push(price);
+      paramCount++;
+    }
+
+    if (category_id >= 1 && category_id <= 7 ) {
+      query += ` category_id = $${paramCount},`;
+      queryParams.push(category_id);
+      paramCount++;
+    }
+
+    if (city_id >= 1 && city_id <= 81 ) {
+      query += ` city_id = $${paramCount},`;
+      queryParams.push(city_id);
+      paramCount++;
+    }
+
+    if (state_id >= 1 && state_id <= 3 ) {
+      query += ` state_id = $${paramCount},`;
+      queryParams.push(state_id);
+      paramCount++;
+    }
+
+    if (image_path) {
+      const image_Url = await uploadToImgBB(image_path);
+      query += ` image_path = $${paramCount},`;
+      queryParams.push(image_Url);
+      paramCount++;
+    }
+    query = query.slice(0, -1);
+
+    query += `  WHERE id = $${paramCount}`;
+    queryParams.push(Adid);
+    paramCount++;
+
+    query += ` AND user_id = $${paramCount}`;
+    queryParams.push(userId);
+    paramCount++;
+
+    query += ` RETURNING id, title, description, price,to_char(ads.date, 'YYYY-MM-DD') as date, image_path, category_id, city_id, state_id, user_id`;
+    console.log(paramCount);
+    console.log(query);
+    const response = await pool.query(query, queryParams);
+
+    res.status(200).json(response.rows[0]);
+    }catch (err) {
     res.status(500).json({ 
-      error: err.message });
+      error: err.message 
+    });
   }
 };
 
