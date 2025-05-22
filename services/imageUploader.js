@@ -20,8 +20,9 @@ const uploadToImgBB = async (base64) => {
             message: error.message,
             response: error.response?.data,
             stack: error.stack
+            
         });
-        throw error; // Re-throw for the calling function to handle
+        return 'empty';
     }
 };
 

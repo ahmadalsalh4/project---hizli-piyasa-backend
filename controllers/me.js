@@ -1,4 +1,5 @@
 const pool = require('../services/db');
+const bcrypt = require('bcrypt');
 const uploadToImgBB = require('../services/imageUploader');
 
 const getUserProfile = async (req, res) => {
@@ -17,10 +18,64 @@ const getUserProfile = async (req, res) => {
 
 const patchUserProfile = async (req, res) => {
   try {
-    res.status(200).json('not implemented yet Profile patched');
-  } catch (err) {
+  const userId = req.userId;
+  const { name, surname, phone_number, password, profile_image_path } = req.body;
+
+  let query = `
+      UPDATE users
+        SET 
+    `;
+
+    const queryParams = [];
+    let paramCount = 1;
+
+    if (name) {
+      query += ` name = $${paramCount},`;
+      queryParams.push(name);
+      paramCount++;
+    }
+
+    if (surname) {
+      query += ` surname = $${paramCount},`;
+      queryParams.push(surname);
+      paramCount++;
+    }
+
+    if (phone_number) {
+      query += ` phone_number = $${paramCount},`;
+      queryParams.push(phone_number);
+      paramCount++;
+    }
+
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      query += ` password = $${paramCount},`;
+      queryParams.push(hashedPassword);
+      paramCount++;
+    }
+
+    if (profile_image_path) {
+      const image_Url = await uploadToImgBB(profile_image_path);
+      query += ` profile_image_path = $${paramCount},`;
+      queryParams.push(image_Url);
+      paramCount++;
+    }
+    query = query.slice(0, -1);
+
+    query += `  WHERE id = $${paramCount}`;
+    queryParams.push(userId);
+    paramCount++;
+
+    query += ` RETURNING id, name, surname, phone_number, email, profile_image_path`;
+    console.log(paramCount);
+    console.log(query);
+    const response = await pool.query(query, queryParams);
+
+    res.status(200).json(response.rows[0]);
+    }catch (err) {
     res.status(500).json({ 
-      error: err.message });
+      error: err.message 
+    });
   }
 };
 

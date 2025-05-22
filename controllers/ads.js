@@ -14,14 +14,6 @@ const getAllAds = async (req, res) => {
       sortOrder = 'DESC' // Default order DESC (newest first)
     } = req.query;
 
-    // Validate numeric inputs
-    if (minPrice && isNaN(parseFloat(minPrice))) {
-      return res.status(400).json({ error: "minPrice must be a number" });
-    }
-    if (maxPrice && isNaN(parseFloat(maxPrice))) {
-      return res.status(400).json({ error: "maxPrice must be a number" });
-    }
-
     // Base query
     let query = `
       SELECT 
@@ -45,14 +37,14 @@ const getAllAds = async (req, res) => {
 
     // Add filters conditionally
     if (category) {
-      query += ` AND category_name ILIKE $${paramCount}`;
-      queryParams.push(`%${category}%`);
+      query += ` AND category_name = $${paramCount}`;
+      queryParams.push(category);
       paramCount++;
     }
 
     if (city) {
-      query += ` AND cities.city_name ILIKE $${paramCount}`;
-      queryParams.push(`%${city}%`);
+      query += ` AND cities.city_name = $${paramCount}`;
+      queryParams.push(city);
       paramCount++;
     }
 
