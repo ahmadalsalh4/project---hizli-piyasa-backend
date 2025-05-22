@@ -7,10 +7,9 @@ const auth = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.userId = decoded.userId;
-    console.log(`current user id = ${req.userId}`)
     next();
   } catch (err) {
-    res.status(400).json({ err });
+    res.status(400).json({ error : err.message });
   }
 };
 

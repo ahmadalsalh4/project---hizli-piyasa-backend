@@ -12,7 +12,7 @@ const Postlogin = async (req, res) => {
     const validPassword = await bcrypt.compare(password, user.rows[0].password);
     if (!validPassword) return res.status(401).json({ error: 'Invalid password' });
 
-    const token = jwt.sign({ userId: user.rows[0].id }, process.env.JWT_SECRET, { expiresIn: '10s' });
+    const token = jwt.sign({ userId: user.rows[0].id }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.status(200).json({ token });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -28,7 +28,7 @@ const Postregister = async (req, res) => {
       'INSERT INTO users (name, surname, phone_number, email, password, profile_image_path) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, name, surname, phone_number, email, profile_image_path',
       [name, surname, phone_number, email, hashedPassword, image_Url]
     );
-    const token = jwt.sign({ userId: result.rows[0].id }, process.env.JWT_SECRET, { expiresIn: '10s' });
+    const token = jwt.sign({ userId: result.rows[0].id }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.status(201).json(result.rows[0],token);
   } catch (err) {
     res.status(500).json({ 
