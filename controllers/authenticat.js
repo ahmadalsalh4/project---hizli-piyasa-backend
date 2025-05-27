@@ -29,7 +29,7 @@ const Postregister = async (req, res) => {
       [name, surname, phone_number, email, hashedPassword, image_Url]
     );
     const token = jwt.sign({ userId: result.rows[0].id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.status(201).json(result.rows[0],token);
+    res.status(201).json({token : token, data : result.rows[0]});
   } catch (err) {
     res.status(500).json({ 
       error: err.message });
