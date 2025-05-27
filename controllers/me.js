@@ -180,7 +180,7 @@ const patchAd = async (req, res) => {
       paramCount++;
     }
 
-    if (category_id >= 1 && category_id <= 7 ) {
+    if (category_id >= 1 && category_id <= 8 ) {
       query += ` category_id = $${paramCount},`;
       queryParams.push(category_id);
       paramCount++;
