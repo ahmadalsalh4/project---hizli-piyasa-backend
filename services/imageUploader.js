@@ -12,7 +12,6 @@ const uploadToImgBB = async (base64) => {
                 },
             }
         );
-
         return response.data.data.url;
     } catch (error) {
         console.error('ImgBB Upload Error:', {
