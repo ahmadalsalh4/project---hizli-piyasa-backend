@@ -2,7 +2,6 @@ const axios = require('axios');
 
 const uploadToImgBB = async (base64) => {
     try {
-
         const formDataString = `key=${encodeURIComponent(process.env.IMGBB_API_KEY)}&image=${encodeURIComponent(base64)}`;
         const response = await axios.post(
             'https://api.imgbb.com/1/upload',
