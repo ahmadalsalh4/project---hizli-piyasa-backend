@@ -114,6 +114,9 @@ const getUserAds = async (req, res) => {
       ORDER BY ads.date DESC`,
       [userId]
     );
+    if (response.rowCount === 0)
+      return res.status(401).json("you dont have any ad");
+
     res.status(200).json({ rowCount: response.rowCount, rows: response.rows });
   } catch (err) {
     res.status(500).json({
@@ -151,6 +154,9 @@ const postAd = async (req, res) => {
 const patchAd = async (req, res) => {
   try {
     const userId = req.userId;
+
+    if (!req.body) return res.status(400).json("no data provided");
+
     const Adid = req.params.id;
     const {
       title,
@@ -166,6 +172,9 @@ const patchAd = async (req, res) => {
       "SELECT user_id FROM ads WHERE id = $1",
       [Adid]
     );
+    if (first_response.rowCount === 0)
+      return res.status(404).json(`ad with id ${Adid} not fund`);
+
     if (first_response.rows[0].user_id !== userId)
       return res.status(401).json("you dont have this ads");
 
@@ -249,6 +258,10 @@ const deleteAd = async (req, res) => {
     const response = await pool.query("SELECT user_id FROM ads WHERE id = $1", [
       Adid,
     ]);
+
+    if (response.rowCount === 0)
+      return res.status(404).json(`ad with id ${Adid} not fund`);
+
     if (response.rows[0].user_id !== userId)
       return res.status(401).json("you dont have this ads");
 
