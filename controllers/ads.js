@@ -1,17 +1,17 @@
-const pool = require('../services/db');
+const pool = require("../services/db");
 
 const getAllAds = async (req, res) => {
   try {
     // Extract query parameters
-    const { 
-      category, 
-      city, 
-      minPrice, 
-      maxPrice, 
-      startDate, 
+    const {
+      category,
+      city,
+      minPrice,
+      maxPrice,
+      startDate,
       search,
-      sortBy = 'date',  // Default sorting by date
-      sortOrder = 'DESC' // Default order DESC (newest first)
+      sortBy = "date", // Default sorting by date
+      sortOrder = "DESC", // Default order DESC (newest first)
     } = req.query;
 
     // Base query
@@ -73,11 +73,13 @@ const getAllAds = async (req, res) => {
     }
 
     // Validate and apply sorting (prevent SQL injection)
-    const validSortColumns = ['date', 'price', 'title']; // Allowed columns for sorting
-    const validSortOrders = ['ASC', 'DESC'];
+    const validSortColumns = ["date", "price", "title"]; // Allowed columns for sorting
+    const validSortOrders = ["ASC", "DESC"];
 
-    const sortColumn = validSortColumns.includes(sortBy) ? sortBy : 'date';
-    const sortDirection = validSortOrders.includes(sortOrder.toUpperCase()) ? sortOrder.toUpperCase() : 'DESC';
+    const sortColumn = validSortColumns.includes(sortBy) ? sortBy : "date";
+    const sortDirection = validSortOrders.includes(sortOrder.toUpperCase())
+      ? sortOrder.toUpperCase()
+      : "DESC";
 
     query += ` ORDER BY ads.${sortColumn} ${sortDirection}`;
 
@@ -85,23 +87,25 @@ const getAllAds = async (req, res) => {
     const response = await pool.query(query, queryParams);
 
     if (response.rowCount === 0) {
-      return res.status(404).json({ message: 'No ads found matching your criteria' });
+      return res
+        .status(404)
+        .json({ message: "No ads found matching your criteria" });
     }
 
-    res.status(200).json({rowCount : response.rowCount, rows : response.rows});
+    res.status(200).json({ rowCount: response.rowCount, rows: response.rows });
   } catch (err) {
     console.error("Error fetching ads:", err);
-    res.status(500).json({ 
-      error: "Internal server error" 
+    res.status(500).json({
+      error: "Internal server error",
     });
   }
 };
 
 const getAdsDetailed = async (req, res) => {
-  const Ad_id = req.params.id
+  const Ad_id = req.params.id;
   try {
     const response = await pool.query(
-  `SELECT
+      `SELECT
     ads.id,
     ads.title,
     ads.description,
@@ -117,19 +121,21 @@ const getAdsDetailed = async (req, res) => {
   INNER JOIN states ON ads.state_id = states.id
   INNER JOIN categories ON ads.category_id = categories.id
   INNER JOIN users ON ads.user_id = users.id
-  WHERE ads.state_id = 1 and ads.id = $1`, [Ad_id]
-);
-    if(response.rowCount === 0)
-      return res.status(404).json(`ads with id = ${Ad_id} not found`)
+  WHERE ads.state_id = 1 and ads.id = $1`,
+      [Ad_id]
+    );
+    if (response.rowCount === 0)
+      return res.status(404).json(`ads with id = ${Ad_id} not found`);
     res.status(200).json(response.rows);
   } catch (err) {
-    res.status(500).json({ 
-      error: err.message });
+    res.status(500).json({
+      error: err.message,
+    });
   }
 };
 
 const getAdsByUser = async (req, res) => {
-  const usr_id = req.params.id
+  const usr_id = req.params.id;
   try {
     const response = await pool.query(
       `SELECT 
@@ -142,14 +148,18 @@ const getAdsByUser = async (req, res) => {
         FROM ads
       INNER JOIN cities ON ads.city_id = cities.id
       WHERE ads.state_id = 1 and user_id = $1
-      ORDER BY ads.date DESC`,[usr_id]
+      ORDER BY ads.date DESC`,
+      [usr_id]
     );
-    if(response.rowCount === 0)
-      return res.status(404).json(`user with id = ${usr_id} douse not have any ad`)
-    res.status(200).json({rowCount : response.rowCount, rows : response.rows});
+    if (response.rowCount === 0)
+      return res
+        .status(404)
+        .json(`user with id = ${usr_id} douse not have any ad`);
+    res.status(200).json({ rowCount: response.rowCount, rows: response.rows });
   } catch (err) {
-    res.status(500).json({ 
-      error: err.message });
+    res.status(500).json({
+      error: err.message,
+    });
   }
 };
 

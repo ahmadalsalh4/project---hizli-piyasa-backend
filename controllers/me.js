@@ -1,12 +1,12 @@
-const pool = require('../services/db');
-const bcrypt = require('bcrypt');
-const uploadToImgBB = require('../services/imageUploader');
+const pool = require("../services/db");
+const bcrypt = require("bcrypt");
+const uploadToImgBB = require("../services/imageUploader");
 
 const getUserProfile = async (req, res) => {
   const userId = req.userId;
   try {
     const result = await pool.query(
-      'SELECT id, name, surname, phone_number, email, profile_image_path FROM users WHERE id = $1', 
+      "SELECT id, name, surname, phone_number, email, profile_image_path FROM users WHERE id = $1",
       [userId]
     );
 
@@ -18,10 +18,11 @@ const getUserProfile = async (req, res) => {
 
 const patchUserProfile = async (req, res) => {
   try {
-  const userId = req.userId;
-  const { name, surname, phone_number, password, profile_image_path } = req.body;
+    const userId = req.userId;
+    const { name, surname, phone_number, password, profile_image_path } =
+      req.body;
 
-  let query = `
+    let query = `
       UPDATE users
         SET 
     `;
@@ -72,9 +73,9 @@ const patchUserProfile = async (req, res) => {
     const response = await pool.query(query, queryParams);
 
     res.status(200).json(response.rows[0]);
-    }catch (err) {
-    res.status(500).json({ 
-      error: err.message 
+  } catch (err) {
+    res.status(500).json({
+      error: err.message,
     });
   }
 };
@@ -82,23 +83,15 @@ const patchUserProfile = async (req, res) => {
 const deleteUserProfile = async (req, res) => {
   const userId = req.userId;
   try {
-    await pool.query(
-      'DELETE FROM users WHERE id = $1', 
-      [userId]
-    );
+    await pool.query("DELETE FROM users WHERE id = $1", [userId]);
 
     res.status(200).json(`User deleted successfully`);
   } catch (err) {
-    res.status(500).json({ 
-      error: err.message });
+    res.status(500).json({
+      error: err.message,
+    });
   }
 };
-
-
-
-
-
-
 
 const getUserAds = async (req, res) => {
   const userId = req.userId;
@@ -116,45 +109,65 @@ const getUserAds = async (req, res) => {
       INNER JOIN states ON ads.state_id = states.id
       INNER JOIN cities ON ads.city_id = cities.id
       WHERE user_id = $1
-      ORDER BY ads.date DESC`,[userId]
+      ORDER BY ads.date DESC`,
+      [userId]
     );
-    res.status(200).json({rowCount : response.rowCount, rows : response.rows});
+    res.status(200).json({ rowCount: response.rowCount, rows: response.rows });
   } catch (err) {
-    res.status(500).json({ 
-      error: err.message });
+    res.status(500).json({
+      error: err.message,
+    });
   }
 };
 
 const postAd = async (req, res) => {
   const userId = req.userId;
-  const {title, description, price, image_path, category_id , city_id  } = req.body;
+  const { title, description, price, image_path, category_id, city_id } =
+    req.body;
   try {
     const image_Url = await uploadToImgBB(image_path);
     const result = await pool.query(
-      'INSERT INTO ads (user_id, title, description, price, image_path, category_id , city_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, price',
-      [userId,title, description, Number(price), image_Url, Number(category_id) , Number(city_id)]
+      "INSERT INTO ads (user_id, title, description, price, image_path, category_id , city_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, price",
+      [
+        userId,
+        title,
+        description,
+        Number(price),
+        image_Url,
+        Number(category_id),
+        Number(city_id),
+      ]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    res.status(500).json({ 
-      error: err.message });
+    res.status(500).json({
+      error: err.message,
+    });
   }
 };
 
 const patchAd = async (req, res) => {
   try {
-  const userId = req.userId;
-  const Adid = req.params.id;
-  const { title, description, price, image_path, category_id, city_id, state_id } = req.body;
+    const userId = req.userId;
+    const Adid = req.params.id;
+    const {
+      title,
+      description,
+      price,
+      image_path,
+      category_id,
+      city_id,
+      state_id,
+    } = req.body;
 
-  const first_response = await pool.query(
-      'SELECT user_id FROM ads WHERE id = $1', 
+    const first_response = await pool.query(
+      "SELECT user_id FROM ads WHERE id = $1",
       [Adid]
     );
-    if(first_response.rows[0].user_id !== userId)
-        return res.status(401).json('you dont have this ads');
+    if (first_response.rows[0].user_id !== userId)
+      return res.status(401).json("you dont have this ads");
 
-  let query = `
+    let query = `
       UPDATE ads
         SET 
     `;
@@ -180,19 +193,19 @@ const patchAd = async (req, res) => {
       paramCount++;
     }
 
-    if (category_id >= 1 && category_id <= 8 ) {
+    if (category_id >= 1 && category_id <= 8) {
       query += ` category_id = $${paramCount},`;
       queryParams.push(category_id);
       paramCount++;
     }
 
-    if (city_id >= 1 && city_id <= 81 ) {
+    if (city_id >= 1 && city_id <= 81) {
       query += ` city_id = $${paramCount},`;
       queryParams.push(city_id);
       paramCount++;
     }
 
-    if (state_id >= 1 && state_id <= 3 ) {
+    if (state_id >= 1 && state_id <= 3) {
       query += ` state_id = $${paramCount},`;
       queryParams.push(state_id);
       paramCount++;
@@ -220,9 +233,9 @@ const patchAd = async (req, res) => {
     const response = await pool.query(query, queryParams);
 
     res.status(200).json(response.rows[0]);
-    }catch (err) {
-    res.status(500).json({ 
-      error: err.message 
+  } catch (err) {
+    res.status(500).json({
+      error: err.message,
     });
   }
 };
@@ -231,19 +244,27 @@ const deleteAd = async (req, res) => {
   const userId = req.userId;
   const Adid = req.params.id;
   try {
-    const response = await pool.query(
-      'SELECT user_id FROM ads WHERE id = $1', 
-      [Adid]
-    );
-    if(response.rows[0].user_id !== userId)
-        return res.status(401).json('you dont have this ads');
-    
-    await pool.query('delete FROM ads WHERE id = $1', [Adid]);
+    const response = await pool.query("SELECT user_id FROM ads WHERE id = $1", [
+      Adid,
+    ]);
+    if (response.rows[0].user_id !== userId)
+      return res.status(401).json("you dont have this ads");
+
+    await pool.query("delete FROM ads WHERE id = $1", [Adid]);
     res.status(200).json(`Ad with ID ${Adid} deleted successfully`);
   } catch (err) {
-    res.status(500).json({ 
-      error: err.message });
+    res.status(500).json({
+      error: err.message,
+    });
   }
 };
 
-module.exports = { getUserProfile ,patchUserProfile, deleteUserProfile, getUserAds, postAd, patchAd, deleteAd };
+module.exports = {
+  getUserProfile,
+  patchUserProfile,
+  deleteUserProfile,
+  getUserAds,
+  postAd,
+  patchAd,
+  deleteAd,
+};
