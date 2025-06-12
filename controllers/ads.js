@@ -10,8 +10,8 @@ const getAllAds = async (req, res) => {
       maxPrice,
       startDate,
       search,
-      sortBy = "date", // Default sorting by date
-      sortOrder = "DESC", // Default order DESC (newest first)
+      sortBy = "date", // Default sorting by date , Allowed columns for sorting ["date", "price", "title"]
+      sortOrder = "DESC", // Default order DESC (newest first) , Allowed columns for sorting ["ASC", "DESC"]
     } = req.query;
 
     // Base query
