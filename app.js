@@ -12,9 +12,9 @@ app.use(cors());
 app.use(express.json({ limit: "5mb" }));
 
 // Routes
-app.use("/authenticat", authenticatRoutes);
-app.use("/me", meRoutes);
-app.use("/ads", adsRoutes);
+app.use("/api/authenticat", authenticatRoutes);
+app.use("/api/me", meRoutes);
+app.use("/api/ads", adsRoutes);
 
 // Start server
 const PORT = process.env.L_PORT;

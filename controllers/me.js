@@ -19,6 +19,8 @@ const getUserProfile = async (req, res) => {
 const patchUserProfile = async (req, res) => {
   try {
     const userId = req.userId;
+    if (!req.body) return res.status(400).json("no data provided");
+
     const { name, surname, phone_number, password, profile_image_path } =
       req.body;
 
