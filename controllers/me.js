@@ -70,8 +70,6 @@ const patchUserProfile = async (req, res) => {
     paramCount++;
 
     query += ` RETURNING id, name, surname, phone_number, email, profile_image_path`;
-    console.log(paramCount);
-    console.log(query);
     const response = await pool.query(query, queryParams);
 
     res.status(200).json(response.rows[0]);
