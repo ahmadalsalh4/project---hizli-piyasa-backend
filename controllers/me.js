@@ -112,9 +112,6 @@ const getUserAds = async (req, res) => {
       ORDER BY ads.date DESC`,
       [userId]
     );
-    if (response.rowCount === 0)
-      return res.status(401).json("you dont have any ad");
-
     res.status(200).json({ rowCount: response.rowCount, rows: response.rows });
   } catch (err) {
     res.status(500).json({
