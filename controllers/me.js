@@ -101,7 +101,7 @@ const getUserAds = async (req, res) => {
         ads.id,
         ads.title,
         ads.price,
-        to_char(ads.date, 'YYYY-MM-DD') as date,
+        ads.date,
         ads.image_path,
         cities.city_name as city_name,
         states.state_name as state_name

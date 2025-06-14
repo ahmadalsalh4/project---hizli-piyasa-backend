@@ -21,7 +21,7 @@ const getAllAds = async (req, res) => {
         ads.title,
         ads.description,
         ads.price,
-        to_char(ads.date, 'YYYY-MM-DD') as date,
+        ads.date,
         ads.image_path,
         cities.city_name as city_name,
         categories.category_name as category_name
@@ -110,7 +110,7 @@ const getAdsDetailed = async (req, res) => {
     ads.title,
     ads.description,
     ads.price,
-    to_char(ads.date, 'YYYY-MM-DD') as date,
+    ads.date,
     ads.image_path,
     cities.city_name as city_name,
     states.state_name as state_name,
@@ -142,7 +142,7 @@ const getAdsByUser = async (req, res) => {
         ads.id,
         ads.title,
         ads.price,
-        to_char(ads.date, 'YYYY-MM-DD') as date,
+        ads.date,
         ads.image_path,
         cities.city_name as city_name
         FROM ads
