@@ -126,7 +126,7 @@ const getAdsDetailed = async (req, res) => {
     );
     if (response.rowCount === 0)
       return res.status(404).json(`ads with id = ${Ad_id} not found`);
-    res.status(200).json(response.rows);
+    res.status(200).json(response.rows[0]);
   } catch (err) {
     res.status(500).json({
       error: err.message,
@@ -138,7 +138,7 @@ const getAdsByUser = async (req, res) => {
   const usr_id = req.params.id;
   try {
     const response = await pool.query(
-      `SELECT 
+      `SELECT
         ads.id,
         ads.title,
         ads.price,
@@ -151,11 +151,20 @@ const getAdsByUser = async (req, res) => {
       ORDER BY ads.date DESC`,
       [usr_id]
     );
+
     if (response.rowCount === 0)
       return res
         .status(404)
         .json(`user with id = ${usr_id} douse not have any ad`);
-    res.status(200).json({ rowCount: response.rowCount, rows: response.rows });
+    const userdata = await pool.query(
+      "SELECT name, surname, phone_number, profile_image_path FROM users WHERE id = $1",
+      [usr_id]
+    );
+    res.status(200).json({
+      userdata: userdata.rows[0],
+      rowCount: response.rowCount,
+      rows: response.rows,
+    });
   } catch (err) {
     res.status(500).json({
       error: err.message,
