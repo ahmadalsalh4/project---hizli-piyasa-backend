@@ -58,7 +58,9 @@ const patchUserProfile = async (req, res) => {
     }
 
     if (profile_image_path) {
-      const image_Url = await uploadToImgBB(profile_image_path);
+      const image_Url =
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/2048px-No_image_available.svg.png";
+    if (image_path) image_Url = await uploadToImgBB(image_path);
       query += ` profile_image_path = $${paramCount},`;
       queryParams.push(image_Url);
       paramCount++;
@@ -125,7 +127,9 @@ const postAd = async (req, res) => {
   const { title, description, price, image_path, category_id, city_id } =
     req.body;
   try {
-    const image_Url = await uploadToImgBB(image_path);
+    const image_Url =
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/2048px-No_image_available.svg.png";
+    if (image_path) image_Url = await uploadToImgBB(image_path);
     const result = await pool.query(
       "INSERT INTO ads (user_id, title, description, price, image_path, category_id , city_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, price",
       [
@@ -218,7 +222,9 @@ const patchAd = async (req, res) => {
     }
 
     if (image_path) {
-      const image_Url = await uploadToImgBB(image_path);
+      const image_Url =
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/2048px-No_image_available.svg.png";
+    if (image_path) image_Url = await uploadToImgBB(image_path);
       query += ` image_path = $${paramCount},`;
       queryParams.push(image_Url);
       paramCount++;
