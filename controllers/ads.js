@@ -82,7 +82,6 @@ const getAllAds = async (req, res) => {
       : "DESC";
 
     query += ` ORDER BY ads.${sortColumn} ${sortDirection}`;
-
     // Execute query
     const response = await pool.query(query, queryParams);
 

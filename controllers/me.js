@@ -234,8 +234,6 @@ const patchAd = async (req, res) => {
     paramCount++;
 
     query += ` RETURNING id, title, description, price,to_char(ads.date, 'YYYY-MM-DD') as date, image_path, category_id, city_id, state_id, user_id`;
-    console.log(paramCount);
-    console.log(query);
     const response = await pool.query(query, queryParams);
 
     res.status(200).json(response.rows[0]);

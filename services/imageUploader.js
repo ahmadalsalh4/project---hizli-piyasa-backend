@@ -13,7 +13,6 @@ async function uploadToImgBB(base64Image) {
     result = await response.json();
     return result.data.url;
   } catch (err) {
-    console.log(err);
     return "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/2048px-No_image_available.svg.png";
   }
 }
