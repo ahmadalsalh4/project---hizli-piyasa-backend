@@ -82,14 +82,24 @@ const patchUserProfile = async (req, res) => {
 
 const deleteUserProfile = async (req, res) => {
   const userId = req.userId;
-  try {
-    await pool.query("DELETE FROM users WHERE id = $1", [userId]);
+  const client = await pool.connect(); // Get a client from the pool
 
-    res.status(200).json(`User deleted successfully`);
+  try {
+    await client.query("BEGIN"); // Start transaction
+
+    // Delete all user ads first
+    await client.query("DELETE FROM ads WHERE user_id = $1", [userId]);
+
+    // Then delete the user
+    await client.query("DELETE FROM users WHERE id = $1", [userId]);
+
+    await client.query("COMMIT"); // Commit if both queries succeed
+    res.status(200).json(`User and all associated ads deleted successfully`);
   } catch (err) {
-    res.status(500).json({
-      error: err.message,
-    });
+    await client.query("ROLLBACK"); // Rollback on any error
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release(); // Always release the client back to the pool
   }
 };
 
