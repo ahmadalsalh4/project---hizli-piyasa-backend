@@ -146,6 +146,48 @@ const postAd = async (req, res) => {
   }
 };
 
+const getUserAdDetailed = async (req, res) => {
+  const userId = req.userId;
+  const Adid = req.params.id;
+  try {
+    const response = await pool.query("SELECT user_id FROM ads WHERE id = $1", [
+      Adid,
+    ]);
+
+    if (response.rowCount === 0)
+      return res.status(404).json(`ad with id ${Adid} not fund`);
+
+    if (response.rows[0].user_id !== userId)
+      return res.status(401).json("you dont have this ads");
+
+    const q = await pool.query(
+      `SELECT
+    ads.id,
+    ads.title,
+    ads.description,
+    ads.price,
+    ads.date,
+    ads.image_path,
+    cities.city_name as city_name,
+    states.state_name as state_name,
+    categories.category_name as category_name,
+    users.id as user_id
+  FROM ads
+  INNER JOIN cities ON ads.city_id = cities.id
+  INNER JOIN states ON ads.state_id = states.id
+  INNER JOIN categories ON ads.category_id = categories.id
+  INNER JOIN users ON ads.user_id = users.id
+  WHERE ads.id = $1`,
+      [Adid]
+    );
+    res.status(200).json(q.rows[0]);
+  } catch (err) {
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+};
+
 const patchAd = async (req, res) => {
   try {
     const userId = req.userId;
@@ -273,6 +315,7 @@ module.exports = {
   deleteUserProfile,
   getUserAds,
   postAd,
+  getUserAdDetailed,
   patchAd,
   deleteAd,
 };

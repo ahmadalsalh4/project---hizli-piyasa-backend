@@ -6,6 +6,7 @@ const {
   patchUserProfile,
   deleteUserProfile,
   getUserAds,
+  getUserAdDetailed,
   postAd,
   patchAd,
   deleteAd,
@@ -16,6 +17,7 @@ router.patch("/", auth, patchUserProfile);
 router.delete("/", auth, deleteUserProfile);
 
 router.get("/ads", auth, getUserAds);
+router.get("/ads/:id", auth, getUserAdDetailed);
 router.post("/ads", auth, postAd);
 router.patch("/ads/:id", auth, patchAd);
 router.delete("/ads/:id", auth, deleteAd);
