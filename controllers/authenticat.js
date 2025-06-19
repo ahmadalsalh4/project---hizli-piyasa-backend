@@ -32,9 +32,7 @@ const Postregister = async (req, res) => {
     req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const image_Url =
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/2048px-No_image_available.svg.png";
-    if (image_path) image_Url = await uploadToImgBB(image_path);
+    const image_Url = await uploadToImgBB(profile_image_path);
     const result = await pool.query(
       "INSERT INTO users (name, surname, phone_number, email, password, profile_image_path) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, name, surname, phone_number, email, profile_image_path",
       [name, surname, phone_number, email, hashedPassword, image_Url]
