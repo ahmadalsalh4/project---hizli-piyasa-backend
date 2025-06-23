@@ -1,6 +1,7 @@
-const pool = require("../services/db");
 const bcrypt = require("bcrypt");
 const uploadToImgBB = require("../services/imageUploader");
+const pool = require("../services/db");
+const validators = require("../services/valid");
 
 const getUserProfile = async (req, res) => {
   const userId = req.userId;
@@ -19,10 +20,12 @@ const getUserProfile = async (req, res) => {
 const patchUserProfile = async (req, res) => {
   try {
     const userId = req.userId;
-    if (!req.body) return res.status(400).json("no data provided");
-
     const { name, surname, phone_number, password, profile_image_path } =
       req.body;
+    if (!name && !surname && !phone_number && !password && !profile_image_path)
+      return res
+        .status(400)
+        .json({ error: "please provide at least one attribute" });
 
     let query = `
       UPDATE users
@@ -45,12 +48,20 @@ const patchUserProfile = async (req, res) => {
     }
 
     if (phone_number) {
+      if (!validators.ValidatePhoneNumber(phone_number))
+        return res
+          .status(400)
+          .json({ error: "please provide a valid phone_number" });
       query += ` phone_number = $${paramCount},`;
       queryParams.push(phone_number);
       paramCount++;
     }
 
     if (password) {
+      if (!validators.ValidatePassword(password))
+        return res
+          .status(400)
+          .json({ error: "please provide a valid password" });
       const hashedPassword = await bcrypt.hash(password, 10);
       query += ` password = $${paramCount},`;
       queryParams.push(hashedPassword);
@@ -82,24 +93,13 @@ const patchUserProfile = async (req, res) => {
 
 const deleteUserProfile = async (req, res) => {
   const userId = req.userId;
-  const client = await pool.connect(); // Get a client from the pool
-
   try {
-    await client.query("BEGIN"); // Start transaction
+    await pool.query("delete from ads where user_id = $1", [userId]);
+    await pool.query("delete from users where id = $1", [userId]);
 
-    // Delete all user ads first
-    await client.query("DELETE FROM ads WHERE user_id = $1", [userId]);
-
-    // Then delete the user
-    await client.query("DELETE FROM users WHERE id = $1", [userId]);
-
-    await client.query("COMMIT"); // Commit if both queries succeed
-    res.status(200).json(`User and all associated ads deleted successfully`);
+    res.status(200).json(`User with ID ${userId} deleted successfully`);
   } catch (err) {
-    await client.query("ROLLBACK"); // Rollback on any error
     res.status(500).json({ error: err.message });
-  } finally {
-    client.release(); // Always release the client back to the pool
   }
 };
 
@@ -130,45 +130,23 @@ const getUserAds = async (req, res) => {
   }
 };
 
-const postAd = async (req, res) => {
-  const userId = req.userId;
-  const { title, description, price, image_path, category_id, city_id } =
-    req.body;
-  try {
-    const image_Url = await uploadToImgBB(image_path);
-    const result = await pool.query(
-      "INSERT INTO ads (user_id, title, description, price, image_path, category_id , city_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, price",
-      [
-        userId,
-        title,
-        description,
-        Number(price),
-        image_Url,
-        Number(category_id),
-        Number(city_id),
-      ]
-    );
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({
-      error: err.message,
-    });
-  }
-};
-
 const getUserAdDetailed = async (req, res) => {
   const userId = req.userId;
   const Adid = req.params.id;
+  if (!Adid) return res.status(400).json({ error: "please provide a Ad id" });
   try {
+    if (!validators.ValidateNumber(Adid))
+      return res.status(400).json({ error: "please provide a valid Ad id" });
+
     const response = await pool.query("SELECT user_id FROM ads WHERE id = $1", [
       Adid,
     ]);
 
     if (response.rowCount === 0)
-      return res.status(404).json(`ad with id ${Adid} not fund`);
+      return res.status(404).json({ error: `ad with id ${Adid} not fund` });
 
     if (response.rows[0].user_id !== userId)
-      return res.status(401).json("you dont have this ads");
+      return res.status(401).json({ error: "you dont have this ads" });
 
     const q = await pool.query(
       `SELECT
@@ -198,32 +176,101 @@ const getUserAdDetailed = async (req, res) => {
   }
 };
 
-const patchAd = async (req, res) => {
+const postAd = async (req, res) => {
+  const userId = req.userId;
+  const { title, description, price, image_path, category_id, city_id } =
+    req.body;
+  if (!title) return res.status(400).json({ error: "please provide a title" });
+  if (!description)
+    return res.status(400).json({ error: "please provide a description" });
+  if (!price) return res.status(400).json({ error: "please provide a price" });
+  if (!category_id)
+    return res.status(400).json({ error: "please provide a category id" });
+  if (!city_id)
+    return res.status(400).json({ error: "please provide a city id" });
   try {
-    const userId = req.userId;
+    if (!validators.ValidateNumber(price))
+      return res.status(400).json({ error: "please provide a valid price" });
 
-    if (!req.body) return res.status(400).json("no data provided");
+    if (!validators.ValidateNumber(category_id))
+      return res
+        .status(400)
+        .json({ error: "please provide a valid category id" });
 
-    const Adid = req.params.id;
-    const {
-      title,
-      description,
-      price,
-      image_path,
-      category_id,
-      city_id,
-      state_id,
-    } = req.body;
+    if (Number(category_id) < 1 || Number(category_id) > 8)
+      return res
+        .status(400)
+        .json({ error: "please provide a valid category id betwen 1 and 8" });
+
+    if (!validators.ValidateNumber(city_id))
+      return res.status(400).json({ error: "please provide a valid city id" });
+
+    if (Number(city_id) < 1 || Number(city_id) > 81)
+      return res
+        .status(400)
+        .json({ error: "please provide a valid city id betwen 1 and 81" });
+
+    const image_Url = await uploadToImgBB(image_path);
+    const result = await pool.query(
+      "INSERT INTO ads (user_id, title, description, price, image_path, category_id , city_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, price",
+      [
+        userId,
+        title,
+        description,
+        parseFloat(price),
+        image_Url,
+        parseInt(category_id),
+        parseInt(city_id),
+      ]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+};
+
+const patchAd = async (req, res) => {
+  const userId = req.userId;
+  const Adid = req.params.id;
+  if (!Adid) return res.status(400).json({ error: "please provide a Ad id" });
+  const {
+    title,
+    description,
+    price,
+    image_path,
+    category_id,
+    city_id,
+    state_id,
+  } = req.body;
+
+  if (
+    !title &&
+    !description &&
+    !price &&
+    !image_path &&
+    !category_id &&
+    !city_id &&
+    !state_id
+  )
+    return res
+      .status(400)
+      .json({ error: "please provide at least one attribute" });
+
+  try {
+    if (!validators.ValidateNumber(Adid))
+      return res.status(400).json({ error: "please provide a valid Ad id" });
 
     const first_response = await pool.query(
       "SELECT user_id FROM ads WHERE id = $1",
       [Adid]
     );
     if (first_response.rowCount === 0)
-      return res.status(404).json(`ad with id ${Adid} not fund`);
+      return res.status(404).json({ error: `ad with id ${Adid} not fund` });
 
     if (first_response.rows[0].user_id !== userId)
-      return res.status(401).json("you dont have this ads");
+      return res.status(401).json({ error: "you dont have this ads" });
 
     let query = `
       UPDATE ads
@@ -246,24 +293,53 @@ const patchAd = async (req, res) => {
     }
 
     if (price) {
+      if (!validators.ValidateNumber(price))
+        return res.status(400).json({ error: "please provide a valid price" });
       query += ` price = $${paramCount},`;
-      queryParams.push(price);
+      queryParams.push(parseFloat(price));
       paramCount++;
     }
 
-    if (category_id >= 1 && category_id <= 8) {
+    if (category_id) {
+      if (!validators.ValidateNumber(category_id))
+        return res
+          .status(400)
+          .json({ error: "please provide a valid category id" });
+
+      if (Number(category_id) < 1 || Number(category_id) > 8)
+        return res
+          .status(400)
+          .json({ error: "please provide a valid category id betwen 1 and 8" });
       query += ` category_id = $${paramCount},`;
       queryParams.push(category_id);
       paramCount++;
     }
 
-    if (city_id >= 1 && city_id <= 81) {
+    if (city_id) {
+      if (!validators.ValidateNumber(city_id))
+        return res
+          .status(400)
+          .json({ error: "please provide a valid city id" });
+
+      if (Number(city_id) < 1 || Number(city_id) > 81)
+        return res
+          .status(400)
+          .json({ error: "please provide a valid city id betwen 1 and 81" });
       query += ` city_id = $${paramCount},`;
       queryParams.push(city_id);
       paramCount++;
     }
 
-    if (state_id >= 1 && state_id <= 3) {
+    if (state_id) {
+      if (!validators.ValidateNumber(state_id))
+        return res
+          .status(400)
+          .json({ error: "please provide a valid state id" });
+
+      if (Number(state_id) < 1 || Number(state_id) > 3)
+        return res
+          .status(400)
+          .json({ error: "please provide a valid state id betwen 1 and 3" });
       query += ` state_id = $${paramCount},`;
       queryParams.push(state_id);
       paramCount++;
@@ -278,7 +354,7 @@ const patchAd = async (req, res) => {
     query = query.slice(0, -1);
 
     query += `  WHERE id = $${paramCount}`;
-    queryParams.push(Adid);
+    queryParams.push(parseInt(Adid));
     paramCount++;
 
     query += ` AND user_id = $${paramCount}`;
@@ -299,16 +375,19 @@ const patchAd = async (req, res) => {
 const deleteAd = async (req, res) => {
   const userId = req.userId;
   const Adid = req.params.id;
+  if (!Adid) return res.status(400).json({ error: "please provide a Ad id" });
   try {
+    if (!validators.ValidateNumber(Adid))
+      return res.status(400).json({ error: "please provide a valid Ad id" });
     const response = await pool.query("SELECT user_id FROM ads WHERE id = $1", [
       Adid,
     ]);
 
     if (response.rowCount === 0)
-      return res.status(404).json(`ad with id ${Adid} not fund`);
+      return res.status(404).json({ error: `ad with id ${Adid} not found` });
 
     if (response.rows[0].user_id !== userId)
-      return res.status(401).json("you dont have this ads");
+      return res.status(401).json({ error: "you dont have this ads" });
 
     await pool.query("delete FROM ads WHERE id = $1", [Adid]);
     res.status(200).json(`Ad with ID ${Adid} deleted successfully`);

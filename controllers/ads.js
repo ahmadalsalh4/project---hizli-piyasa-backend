@@ -1,20 +1,18 @@
 const pool = require("../services/db");
+const validators = require("../services/valid");
 
 const getAllAds = async (req, res) => {
+  const {
+    category,
+    city,
+    minPrice,
+    maxPrice,
+    startDate,
+    search,
+    sortBy,
+    sortOrder,
+  } = req.query;
   try {
-    // Extract query parameters
-    const {
-      category,
-      city,
-      minPrice,
-      maxPrice,
-      startDate,
-      search,
-      sortBy = "date", // Default sorting by date , Allowed columns for sorting ["date", "price", "title"]
-      sortOrder = "DESC", // Default order DESC (newest first) , Allowed columns for sorting ["ASC", "DESC"]
-    } = req.query;
-
-    // Base query
     let query = `
       SELECT 
         ads.id,
@@ -31,11 +29,9 @@ const getAllAds = async (req, res) => {
       WHERE ads.state_id = 1
     `;
 
-    // Array to hold query parameters
     const queryParams = [];
     let paramCount = 1;
 
-    // Add filters conditionally
     if (category) {
       query += ` AND category_name = $${paramCount}`;
       queryParams.push(category);
@@ -49,18 +45,30 @@ const getAllAds = async (req, res) => {
     }
 
     if (minPrice) {
+      if (!validators.ValidateNumber(minPrice))
+        return res
+          .status(400)
+          .json({ error: "please provide a valid minPrice" });
       query += ` AND ads.price >= $${paramCount}`;
       queryParams.push(parseFloat(minPrice));
       paramCount++;
     }
 
     if (maxPrice) {
+      if (!validators.ValidateNumber(maxPrice))
+        return res
+          .status(400)
+          .json({ error: "please provide a valid maxPrice" });
       query += ` AND ads.price <= $${paramCount}`;
       queryParams.push(parseFloat(maxPrice));
       paramCount++;
     }
 
     if (startDate) {
+      if (!validators.ValidISODateTime(startDate))
+        return res
+          .status(400)
+          .json({ error: "please provide a valid startDate" });
       query += ` AND ads.date >= $${paramCount}`;
       queryParams.push(startDate);
       paramCount++;
@@ -72,37 +80,46 @@ const getAllAds = async (req, res) => {
       paramCount++;
     }
 
-    // Validate and apply sorting (prevent SQL injection)
-    const validSortColumns = ["date", "price", "title"]; // Allowed columns for sorting
-    const validSortOrders = ["ASC", "DESC"];
+    const validSortColumns = ["date", "price", "title"];
+    let sortColumn;
+    if (!sortBy) sortColumn = "date";
+    else {
+      if (validSortColumns.includes(sortBy)) sortColumn = sortBy;
+      else sortColumn = "date";
+    }
 
-    const sortColumn = validSortColumns.includes(sortBy) ? sortBy : "date";
-    const sortDirection = validSortOrders.includes(sortOrder.toUpperCase())
-      ? sortOrder.toUpperCase()
-      : "DESC";
+    const validSortOrders = ["ASC", "DESC"];
+    let sortDirection;
+    if (!sortOrder) sortDirection = "DESC";
+    else {
+      if (validSortOrders.includes(sortOrder.toUpperCase()))
+        sortDirection = sortOrder.toUpperCase();
+      else sortDirection = "DESC";
+    }
 
     query += ` ORDER BY ads.${sortColumn} ${sortDirection}`;
-    // Execute query
     const response = await pool.query(query, queryParams);
 
     if (response.rowCount === 0) {
       return res
         .status(404)
-        .json({ message: "No ads found matching your criteria" });
+        .json({ error: "No ads found matching your criteria" });
     }
 
     res.status(200).json({ rowCount: response.rowCount, rows: response.rows });
   } catch (err) {
-    console.error("Error fetching ads:", err);
     res.status(500).json({
-      error: "Internal server error",
+      error: err.message,
     });
   }
 };
 
 const getAdsDetailed = async (req, res) => {
   const Ad_id = req.params.id;
+  if (!Ad_id) return res.status(400).json({ error: "please provide a Ad id" });
   try {
+    if (!validators.ValidateNumber(Ad_id))
+      return res.status(400).json({ error: "please provide a valid Ad id" });
     const response = await pool.query(
       `SELECT
     ads.id,
@@ -124,7 +141,9 @@ const getAdsDetailed = async (req, res) => {
       [Ad_id]
     );
     if (response.rowCount === 0)
-      return res.status(404).json(`ads with id = ${Ad_id} not found`);
+      return res
+        .status(404)
+        .json({ error: `ads with id = ${Ad_id} not found` });
     res.status(200).json(response.rows[0]);
   } catch (err) {
     res.status(500).json({
@@ -135,7 +154,11 @@ const getAdsDetailed = async (req, res) => {
 
 const getAdsByUser = async (req, res) => {
   const usr_id = req.params.id;
+  if (!usr_id)
+    return res.status(400).json({ error: "please provide a user id" });
   try {
+    if (!validators.ValidateNumber(usr_id))
+      return res.status(400).json({ error: "please provide a valid user id" });
     const response = await pool.query(
       `SELECT
         ads.id,
@@ -154,7 +177,7 @@ const getAdsByUser = async (req, res) => {
     if (response.rowCount === 0)
       return res
         .status(404)
-        .json(`user with id = ${usr_id} douse not have any ad`);
+        .json({ error: `user with id = ${usr_id} douse not have any ad` });
     const userdata = await pool.query(
       "SELECT name, surname, phone_number, profile_image_path FROM users WHERE id = $1",
       [usr_id]
