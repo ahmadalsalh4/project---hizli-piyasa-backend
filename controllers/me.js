@@ -20,6 +20,10 @@ const getUserProfile = async (req, res) => {
 const patchUserProfile = async (req, res) => {
   try {
     const userId = req.userId;
+    const { email } = req.body;
+    if (email)
+      return res.status(400).json({ error: "you cant update your email" });
+
     const { name, surname, phone_number, password, profile_image_path } =
       req.body;
     if (!name && !surname && !phone_number && !password && !profile_image_path)
@@ -213,15 +217,7 @@ const postAd = async (req, res) => {
     const image_Url = await uploadToImgBB(image_path);
     const result = await pool.query(
       "INSERT INTO ads (user_id, title, description, price, image_path, category_id , city_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, price",
-      [
-        userId,
-        title,
-        description,
-        parseFloat(price),
-        image_Url,
-        parseInt(category_id),
-        parseInt(city_id),
-      ]
+      [userId, title, description, price, image_Url, category_id, city_id]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -296,7 +292,7 @@ const patchAd = async (req, res) => {
       if (!validators.ValidateNumber(price))
         return res.status(400).json({ error: "please provide a valid price" });
       query += ` price = $${paramCount},`;
-      queryParams.push(parseFloat(price));
+      queryParams.push(price);
       paramCount++;
     }
 
@@ -354,7 +350,7 @@ const patchAd = async (req, res) => {
     query = query.slice(0, -1);
 
     query += `  WHERE id = $${paramCount}`;
-    queryParams.push(parseInt(Adid));
+    queryParams.push(Adid);
     paramCount++;
 
     query += ` AND user_id = $${paramCount}`;

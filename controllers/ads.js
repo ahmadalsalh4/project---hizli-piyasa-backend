@@ -50,7 +50,7 @@ const getAllAds = async (req, res) => {
           .status(400)
           .json({ error: "please provide a valid minPrice" });
       query += ` AND ads.price >= $${paramCount}`;
-      queryParams.push(parseFloat(minPrice));
+      queryParams.push(minPrice);
       paramCount++;
     }
 
@@ -60,7 +60,7 @@ const getAllAds = async (req, res) => {
           .status(400)
           .json({ error: "please provide a valid maxPrice" });
       query += ` AND ads.price <= $${paramCount}`;
-      queryParams.push(parseFloat(maxPrice));
+      queryParams.push(maxPrice);
       paramCount++;
     }
 
