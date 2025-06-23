@@ -1,25 +1,17 @@
 const express = require("express");
 const router = express.Router();
-const auth = require("../services/auth");
-const {
-  getUserProfile,
-  patchUserProfile,
-  deleteUserProfile,
-  getUserAds,
-  getUserAdDetailed,
-  postAd,
-  patchAd,
-  deleteAd,
-} = require("../controllers/me");
+const container = require("../services/container");
+const authController = require("../controllers/me")(container);
+const auth = container.get("auth");
 
-router.get("/", auth, getUserProfile);
-router.patch("/", auth, patchUserProfile);
-router.delete("/", auth, deleteUserProfile);
+router.get("/", auth, authController.getUserProfile);
+router.patch("/", auth, authController.patchUserProfile);
+router.delete("/", auth, authController.deleteUserProfile);
 
-router.get("/ads", auth, getUserAds);
-router.get("/ads/:id", auth, getUserAdDetailed);
-router.post("/ads", auth, postAd);
-router.patch("/ads/:id", auth, patchAd);
-router.delete("/ads/:id", auth, deleteAd);
+router.get("/ads", auth, authController.getUserAds);
+router.get("/ads/:id", auth, authController.getUserAdDetailed);
+router.post("/ads", auth, authController.postAd);
+router.patch("/ads/:id", auth, authController.patchAd);
+router.delete("/ads/:id", auth, authController.deleteAd);
 
 module.exports = router;

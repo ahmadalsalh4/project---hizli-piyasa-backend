@@ -1,13 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const {
-  getAllAds,
-  getAdsDetailed,
-  getAdsByUser,
-} = require("../controllers/ads");
+const container = require("../services/container");
+const adsController = require("../controllers/ads")(container);
 
-router.get("/", getAllAds);
-router.get("/:id", getAdsDetailed);
-router.get("/user/:id", getAdsByUser);
+router.get("/", adsController.getAllAds);
+router.get("/:id", adsController.getAdsDetailed);
+router.get("/user/:id", adsController.getAdsByUser);
 
 module.exports = router;
