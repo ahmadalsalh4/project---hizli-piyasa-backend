@@ -9,8 +9,8 @@ router.patch("/", auth, authController.patchUserProfile);
 router.delete("/", auth, authController.deleteUserProfile);
 
 router.get("/ads", auth, authController.getUserAds);
-router.get("/ads/:id", auth, authController.getUserAdDetailed);
 router.post("/ads", auth, authController.postAd);
+router.get("/ads/:id", auth, authController.getUserAdDetailed);
 router.patch("/ads/:id", auth, authController.patchAd);
 router.delete("/ads/:id", auth, authController.deleteAd);
 
