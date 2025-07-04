@@ -7,6 +7,10 @@ function logError(error) {
   const timestamp = new Date().toISOString();
   const logMessage = `[${timestamp}] ERROR: ${error.stack || error}\n`;
 
+  if (!fs.existsSync(path.dirname(logFilePath))) {
+    fs.mkdirSync(path.dirname(logFilePath));
+  }
+
   fs.appendFile(logFilePath, logMessage, (err) => {
     if (err) console.error("Log dosyasına yazılamadı:", err);
   });
